@@ -1,5 +1,6 @@
 #include <iostream>
 #include <list>
+#include <numeric>
 
 #include "node.h"
 #include "graph.h"
@@ -107,6 +108,41 @@ namespace lod
     }
 }
 
+// Check if tree is balanced (difference between subtrees no more than one)
+namespace bt
+{
+    using namespace Tree;
+
+    namespace details
+    {
+        static const int ERROR_TAG = std::numeric_limits<int>::min();
+
+        int checkHeight(IntNodePtr const& root)
+        {
+            if (!root)
+                return -1;
+
+            int leftHeight = checkHeight(root->mLeftChild);
+            if (leftHeight == ERROR_TAG)
+                return ERROR_TAG; // Propagate error to the top
+
+            int rightHeight = checkHeight(root->mRightChild);
+            if (rightHeight == ERROR_TAG)
+                return ERROR_TAG; // Propagate error to the top
+
+            if (std::abs(leftHeight - rightHeight) > 1)
+                return ERROR_TAG; // Pass error back
+            else
+                return std::max(leftHeight, rightHeight) + 1;
+        }
+    }
+
+    bool isBalanced(IntNodePtr const& root)
+    {
+        return details::checkHeight(root) != details::ERROR_TAG;
+    }
+}
+
 int main(int /*argc*/, char */*argv*/[])
 {
     // 1
@@ -148,6 +184,28 @@ int main(int /*argc*/, char */*argv*/[])
 //            }
 //            std::cout << std::endl;
 //        }
+//    } catch (std::exception const& e) {
+//        std::cout << e.what() << std::endl;
+//    }
+
+    // 4
+//    try {
+//        std::vector<int> v {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+//        auto tree = bst::createMinimalBST(v);
+
+//        // Must be balanced
+//        std::cout << "Is balanced: " << std::boolalpha << bt::isBalanced(tree) << std::endl;
+
+//        // Disbalance somehow
+//        Tree::IntNodePtr min = tree->mLeftChild;
+//        while (min->mLeftChild)
+//            min = min->mLeftChild;
+
+//        std::cout << "Min element: " << min->mKey << std::endl;
+
+//        min->makeLeftChild(-1)->makeLeftChild(-2);
+
+//        std::cout << "Is balanced: " << std::boolalpha << bt::isBalanced(tree) << std::endl;
 //    } catch (std::exception const& e) {
 //        std::cout << e.what() << std::endl;
 //    }
