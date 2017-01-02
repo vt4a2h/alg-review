@@ -34,6 +34,23 @@ namespace Tree {
          return nullptr;
       }
 
+      Ptr setLeftChild(Ptr const& l)
+      {
+          return setChild(mLeftChild, l);
+      }
+
+      Ptr setRightChild(Ptr const& r)
+      {
+          return setChild(mRightChild, r);
+      }
+
+      Ptr setChild(Ptr & child, Ptr const& n)
+      {
+          if (n)
+              n->mParent = ptr();
+          return child = n;
+      }
+
       void dump(const std::string &path)
       {
          std::ofstream out(path, std::ofstream::out);
@@ -87,6 +104,9 @@ namespace Tree {
       streamColor(out, node.mKey, node.mColor);
       out << parentKey << " -> " << node.mKey << ";\n";
    }
+
+   using IntNode = Node<int>;
+   using IntNodePtr = IntNode::Ptr;
 
 } // namespace Tree
 

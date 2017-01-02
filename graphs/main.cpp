@@ -46,9 +46,29 @@ namespace rbn
 }
 
 // Minimal tree (create minimal tree from sorted array with unique elements)
-namespace mt
+namespace bst
 {
+    using namespace Tree;
 
+    namespace details
+    {
+        IntNodePtr createMinimalBSTImpl(std::vector<int> const& array, int from, int to)
+        {
+            if (to < from)
+                return nullptr;
+
+            int mid = (from + to) / 2;
+            auto node = std::make_shared<IntNode>(array.at(mid));
+            node->setLeftChild(createMinimalBSTImpl(array, from, mid - 1));
+            node->setRightChild(createMinimalBSTImpl(array, mid + 1, to));
+            return node;
+        }
+    }
+
+    IntNodePtr createMinimalBST(std::vector<int> const& array)
+    {
+        return details::createMinimalBSTImpl(array, 0, array.size() - 1);
+    }
 }
 
 int main(int /*argc*/, char */*argv*/[])
@@ -71,7 +91,16 @@ int main(int /*argc*/, char */*argv*/[])
 //    system("cd /home/vt4a2h/Projects/alg/ && dot graph.dot -Tsvg > graph.svg ");
 
     // 2
+//    try {
+//        std::vector<int> v {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+//        auto tree = bst::createMinimalBST(v);
+//        tree->dump("/home/vt4a2h/Projects/alg/graph.dot");
+//        system("cd /home/vt4a2h/Projects/alg/ && dot graph.dot -Tsvg > graph.svg ");
+//    } catch (std::exception const& e) {
+//        std::cout << e.what() << std::endl;
+//    }
 
+    // 3
 
     return 0;
 }
