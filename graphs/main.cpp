@@ -1,4 +1,5 @@
 #include <iostream>
+#include <list>
 
 #include "node.h"
 #include "graph.h"
@@ -71,6 +72,41 @@ namespace bst
     }
 }
 
+// List of depth. For binary tree, algorithm to create a linked list of all nodes on each depth
+// using preorder traversal algorithm
+namespace lod
+{
+    using namespace Tree;
+    using NodesList = std::list<IntNodePtr>;
+    using NodesListsArray = std::vector<NodesList>;
+
+    namespace details
+    {
+        void createLevelLinkedListImpl(IntNodePtr const& root, NodesListsArray & lists, std::size_t level)
+        {
+            if (!root)
+                return;
+
+            // Check if level not in the list
+            if (lists.size() == level) {
+                lists.push_back(NodesList());
+                lists.back().push_back(root);
+            } else
+                lists[level].push_back(root);
+
+            createLevelLinkedListImpl(root->mLeftChild, lists, level + 1);
+            createLevelLinkedListImpl(root->mRightChild, lists, level + 1);
+        }
+    }
+
+    NodesListsArray createLevelLinkedList(IntNodePtr const& root)
+    {
+        NodesListsArray lists;
+        details::createLevelLinkedListImpl(root, lists, 0);
+        return lists;
+    }
+}
+
 int main(int /*argc*/, char */*argv*/[])
 {
     // 1
@@ -101,6 +137,20 @@ int main(int /*argc*/, char */*argv*/[])
 //    }
 
     // 3
+//    try {
+//        std::vector<int> v {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+//        auto tree = bst::createMinimalBST(v);
+
+//        auto lists = lod::createLevelLinkedList(tree);
+//        for (auto && list : lists) {
+//            for (auto && n : list) {
+//                std::cout << n->mKey << "\t";
+//            }
+//            std::cout << std::endl;
+//        }
+//    } catch (std::exception const& e) {
+//        std::cout << e.what() << std::endl;
+//    }
 
     return 0;
 }
