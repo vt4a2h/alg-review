@@ -104,4 +104,5 @@ namespace g
     };
 
     using IntGraph = Graph<int>;
+    using StrGraph = Graph<std::string>;
 }

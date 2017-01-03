@@ -2,6 +2,8 @@
 #include <list>
 #include <numeric>
 
+#include <boost/optional.hpp>
+
 #include "node.h"
 #include "graph.h"
 
@@ -143,6 +145,145 @@ namespace bt
     }
 }
 
+// Check if tree is a valid BST
+namespace vbst
+{
+    using namespace Tree;
+
+    namespace details
+    {
+        using Int = boost::optional<int>;
+        bool checkBSTImpl(IntNodePtr const& n, Int min = Int(), Int max = Int())
+        {
+            if (!n)
+                return true;
+
+            if ((min && n->mKey <= min) || (max && n->mKey > max))
+                return false;
+
+            if (!checkBSTImpl(n->mLeftChild, min, n->mKey) ||
+                !checkBSTImpl(n->mRightChild, n->mKey, max))
+                return false;
+
+            return true;
+        }
+    }
+
+    bool checkBST(IntNodePtr const& root)
+    {
+        return details::checkBSTImpl(root);
+    }
+}
+
+// Successor (find "next" node)
+namespace sr
+{
+    using namespace Tree;
+
+    namespace details
+    {
+        IntNodePtr leftMostChild(IntNodePtr node)
+        {
+            if (!node)
+                return nullptr;
+
+            while (node->mLeftChild)
+                node = node->mLeftChild;
+
+            return node;
+        }
+    }
+
+    IntNodePtr successor(IntNodePtr const& node)
+    {
+        if (!node)
+            return nullptr;
+
+        // If there are right child just return leftmost child shich will be the next node
+        if (node->mRightChild)
+            return details::leftMostChild(node->mRightChild);
+        else {
+            auto current = node;
+            auto parent  = node->parent();
+
+            // Go up until we're on left node instead of right
+            while (parent && parent->mLeftChild != current) {
+                current = parent;
+                parent  = parent->parent();
+            }
+
+            return parent;
+        }
+    }
+}
+
+// Topological sort.
+// Given list of projects and list of dependencies (pairs second depends on first). Find bild order
+// or error is there is no valid build order.
+namespace ts
+{
+    using namespace g;
+    using ProjectsVector     = std::vector<std::string>;
+    using DependenciesVector = std::vector<std::pair<std::string, std::string>>;
+
+    namespace details
+    {
+        using Project = Vertex<std::string>;
+        using OrderedProjects = std::list<Project::Ptr>;
+
+        bool doDFS(Project::Ptr const& project, OrderedProjects & projects)
+        {
+            // Cycle detected
+            if (project->state() == Project::Visiting)
+                return false;
+
+            if (project->state() == Project::Unvisited) {
+                project->setState(Project::Visiting);
+
+                for (auto && child : project->linkedVertices())
+                    if (!doDFS(child, projects))
+                        return false; // Propagate cycle
+
+                project->setState(Project::Visited);
+                projects.push_front(project);
+            }
+
+            return true;
+        }
+
+        decltype(auto) fillGraph(ProjectsVector const& projects,
+                                 DependenciesVector const& dependencies)
+        {
+            auto graph = std::make_unique<StrGraph>();
+
+            for (auto && project : projects)
+                graph->addVertex(project);
+
+            // Second depends on first
+            for (auto && edge : dependencies)
+                graph->addEdge(edge.second, edge.first);
+
+            return graph;
+        }
+    }
+
+    ProjectsVector orderedProjects(ProjectsVector     const& projects,
+                                   DependenciesVector const& dependencies)
+    {
+        auto graph = details::fillGraph(projects, dependencies);
+
+        details::OrderedProjects op;
+        for (auto && project : graph->verticies())
+            if (project.second->state() == details::Project::Unvisited)
+                if (!details::doDFS(project.second, op))
+                    return ProjectsVector();
+
+        ProjectsVector result(op.size());
+        std::transform(op.begin(), op.end(), result.begin(), [](auto && p) { return p->data(); });
+        return result;
+    }
+}
+
 int main(int /*argc*/, char */*argv*/[])
 {
     // 1
@@ -209,6 +350,59 @@ int main(int /*argc*/, char */*argv*/[])
 //    } catch (std::exception const& e) {
 //        std::cout << e.what() << std::endl;
 //    }
+
+    // 5
+//    try {
+//        std::vector<int> v {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+//        auto tree = bst::createMinimalBST(v);
+
+//        std::cout << "Is BST: " << std::boolalpha << vbst::checkBST(tree) << std::endl;
+
+//        Tree::IntNodePtr min = tree->mLeftChild;
+//        while (min->mLeftChild)
+//            min = min->mLeftChild;
+//        min->makeLeftChild(100)->makeLeftChild(200);
+
+//        std::cout << "Is BST: " << std::boolalpha << bt::isBalanced(tree) << std::endl;
+//    } catch (std::exception const& e) {
+//        std::cout << e.what() << std::endl;
+//    }
+
+    // 6
+//    try {
+//        std::vector<int> v {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+//        auto tree = bst::createMinimalBST(v);
+
+//        Tree::IntNodePtr min = tree->mLeftChild;
+//        while (min->mLeftChild)
+//            min = min->mLeftChild;
+
+//        // 1 -> 2
+//        std::cout << min->mKey << " -> " << sr::successor(min)->mKey << std::endl;
+
+//        // 2 -> 3
+//        auto two = min->parent();
+//        std::cout << two->mKey << " -> " << sr::successor(two)->mKey << std::endl;
+
+//        // 3 -> 4
+//        auto three = sr::successor(min)->mRightChild;
+//        std::cout << three->mKey << " -> " << sr::successor(three)->mKey << std::endl;
+
+//    } catch (std::exception const& e) {
+//        std::cout << e.what() << std::endl;
+//    }
+
+    // 7
+    ts::ProjectsVector pv {"a", "b", "c", "d", "e", "f"};
+    ts::DependenciesVector dv {{"a", "d"}, {"f", "b"}, {"b", "d"}, {"f", "a"}, {"d", "c"}};
+    try {
+        auto orderedProjects = ts::orderedProjects(pv, dv);
+        for (auto && p : orderedProjects)
+            std::cout << p << "\t";
+        std::cout << std::endl;
+    } catch (std::exception const& e) {
+        std::cout << e.what() << std::endl;
+    }
 
     return 0;
 }

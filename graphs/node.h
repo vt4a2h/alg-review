@@ -94,7 +94,7 @@ namespace Tree {
           << " [style=filled,color=black,fillcolor="
           << (isBlack || isRed ? isRed ? "red" : "black" : "white")
           << ",fontcolor="
-          << (!isBlack && !isRed ? "black" : "white")
+          << (isBlack || isRed ? "black" : "white")
           << "];\n";
    }
 
