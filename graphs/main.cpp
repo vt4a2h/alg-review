@@ -322,6 +322,119 @@ namespace fca
     }
 }
 
+// Given a BST which created by traversing array left to right,
+// generate all arrays may lead to this tree
+namespace bstsq
+{
+    using List = std::list<int>;
+    using VectorLists = std::vector<List>;
+
+    using namespace Tree;
+
+    namespace details
+    {
+        void mergeLists(List & first, List & second, VectorLists & results, List & prefix);
+
+        void addHeadToPrefixAndMerge(List & first, List & second, VectorLists & results,
+                                     List & prefix, List & listForTakingHead)
+        {
+            // Take head
+            int head = listForTakingHead.front();
+            listForTakingHead.pop_front();
+            prefix.push_back(head);
+
+            mergeLists(first, second, results, prefix);
+
+            // Restore head
+            prefix.pop_back();
+            listForTakingHead.push_front(head);
+        }
+
+        // Merge lists in all possible ways
+        void mergeLists(List & first, List & second, VectorLists & results, List & prefix)
+        {
+            // If one list is empty, add remainder to the prefix and store result
+            if (first.empty() || second.empty()) {
+                List result(prefix);
+                std::copy(first.begin(), first.end(), std::back_inserter(result));
+                std::copy(second.begin(), second.end(), std::back_inserter(result));
+                results.push_back(result);
+                return;
+            }
+
+            // Recurse go through first and second lists
+            addHeadToPrefixAndMerge(first, second, results, prefix, first /*listForTakingHead*/);
+            addHeadToPrefixAndMerge(first, second, results, prefix, second /*listForTakingHead*/);
+        }
+    }
+
+    VectorLists allSequences(IntNodePtr const& root)
+    {
+        VectorLists result;
+
+        if (!root) {
+            result.push_back(List());
+            return result;
+        }
+
+        List prefix;
+        prefix.push_back(root->mKey);
+
+        // Recurse on left and right subtrees
+        auto leftSeq  = allSequences(root->mLeftChild);
+        auto rightSeq = allSequences(root->mRightChild);
+
+        // Merge all list from the left and right sides
+        for (auto && left : leftSeq) {
+            for (auto && right : rightSeq) {
+                VectorLists merged;
+                details::mergeLists(left, right, merged, prefix);
+                std::copy(merged.begin(), merged.end(), std::back_inserter(result));
+            }
+        }
+
+        return result;
+    }
+}
+
+// There are two large binary trees (T1 and T2), check if T2 is sutree of T1. T1 is bigger.
+namespace ct
+{
+    using namespace Tree;
+
+    namespace details
+    {
+        bool matchTree(IntNodePtr const& n1, IntNodePtr const& n2)
+        {
+            if (!n1 && !n2)
+                return true; // nothing left
+            else if (!n1 || !n2)
+                return false; // one of them is empty, don't match
+            else if (n1->mKey != n2->mKey)
+                return false; // different data
+            else // Recurse compare subtrees
+                return matchTree(n1->mLeftChild, n2->mLeftChild) &&
+                       matchTree(n1->mRightChild, n2->mRightChild);
+        }
+
+        bool subTree(IntNodePtr const& n1, IntNodePtr const& n2)
+        {
+            if (!n1)
+                return false; // big tree is empty
+            else if (n1->mKey == n2->mKey && matchTree(n1, n2))
+                return true;
+
+            return subTree(n1->mLeftChild, n2) || subTree(n1->mRightChild, n2);
+        }
+    }
+
+    bool containsTree(IntNodePtr const& t1, IntNodePtr const& t2)
+    {
+      // The empty tree is always a subtree :)
+      return !t2 || details::subTree(t1, t2);
+    }
+}
+
 int main(int /*argc*/, char */*argv*/[])
 {
     // 1
@@ -462,6 +575,46 @@ int main(int /*argc*/, char */*argv*/[])
 //            std::cout << "First common ancestor: " << ca->mKey << std::endl;
 //        else
 //            std::cout << "No common ancestor here." << std::endl;
+//    } catch (std::exception const& e) {
+//        std::cout << e.what() << std::endl;
+//    }
+
+    // 9
+    // TODO: revise
+//    try {
+//        std::vector<int> v {1, 2, 3, 4, 5};
+//        auto tree = bst::createMinimalBST(v);
+
+//        auto allSequences = bstsq::allSequences(tree);
+//        for (auto && s : allSequences) {
+//            for (auto && e : s) {
+//                std::cout << e << "\t";
+//            }
+//            std::cout << std::endl;
+//        }
+
+//        tree->dump("/home/vt4a2h/Projects/alg/bstsq_graph.dot");
+//        system("cd /home/vt4a2h/Projects/alg/ && dot bstsq_graph.dot -Tsvg > bstsq_graph.svg ");
+//    } catch (std::exception const& e) {
+//        std::cout << e.what() << std::endl;
+//    }
+
+    // 10
+//    try {
+//        std::vector<int> v1 {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+//        auto tree1 = bst::createMinimalBST(v1);
+
+//        auto tree2 = std::make_shared<Tree::IntNode>(2);
+//        tree2->makeLeftChild(1);
+//        tree2->makeRightChild(3)->makeRightChild(4);
+
+//        tree1->dump("/home/vt4a2h/Projects/alg/tree1.dot");
+//        system("cd /home/vt4a2h/Projects/alg/ && dot tree1.dot -Tsvg > tree1.svg ");
+
+//        tree2->dump("/home/vt4a2h/Projects/alg/tree2.dot");
+//        system("cd /home/vt4a2h/Projects/alg/ && dot tree2.dot -Tsvg > tree2.svg ");
+
+//        std::cout << std::boolalpha << ct::containsTree(tree1, tree2) << std::endl;
 //    } catch (std::exception const& e) {
 //        std::cout << e.what() << std::endl;
 //    }
