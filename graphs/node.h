@@ -51,6 +51,20 @@ namespace Tree {
           return child = n;
       }
 
+      int depth() const
+      {
+          Ptr p = parent();
+          int d = 0;
+          while (p) {
+              if (p.get() == this)
+                  throw std::logic_error("There is a cycle. Cannot determine depth.");
+
+              p = p->parent();
+              ++d;
+          }
+          return d;
+      }
+
       void dump(const std::string &path)
       {
          std::ofstream out(path, std::ofstream::out);
@@ -94,7 +108,7 @@ namespace Tree {
           << " [style=filled,color=black,fillcolor="
           << (isBlack || isRed ? isRed ? "red" : "black" : "white")
           << ",fontcolor="
-          << (isBlack || isRed ? "black" : "white")
+          << (isBlack || isRed ? "white" : "black")
           << "];\n";
    }
 

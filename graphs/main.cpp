@@ -284,6 +284,44 @@ namespace ts
     }
 }
 
+// Find first common ancestor for two nodes
+namespace fca
+{
+    using namespace Tree;
+
+    namespace details
+    {
+        IntNodePtr doUpBy(IntNodePtr node, int depth)
+        {
+            while (depth > 0 && node) {
+                node = node->parent();
+                --depth;
+            }
+
+            return node;
+        }
+    }
+
+    IntNodePtr commonAncestor(IntNodePtr const& f, IntNodePtr const& s)
+    {
+        assert(f && s);
+        int delta = f->depth() - s->depth();
+        IntNodePtr shallower = delta > 0 ? s : f;
+        IntNodePtr deeper    = delta > 0 ? f : s;
+
+        // Up deeper node
+        deeper = details::doUpBy(deeper, std::abs(delta));
+
+        // Search for intersection
+        while (deeper != shallower && deeper && shallower) {
+            deeper = deeper->parent();
+            shallower = shallower->parent();
+        }
+
+        return !shallower || !deeper ? nullptr : shallower;
+    }
+}
+
 int main(int /*argc*/, char */*argv*/[])
 {
     // 1
@@ -393,16 +431,40 @@ int main(int /*argc*/, char */*argv*/[])
 //    }
 
     // 7
-    ts::ProjectsVector pv {"a", "b", "c", "d", "e", "f"};
-    ts::DependenciesVector dv {{"a", "d"}, {"f", "b"}, {"b", "d"}, {"f", "a"}, {"d", "c"}};
-    try {
-        auto orderedProjects = ts::orderedProjects(pv, dv);
-        for (auto && p : orderedProjects)
-            std::cout << p << "\t";
-        std::cout << std::endl;
-    } catch (std::exception const& e) {
-        std::cout << e.what() << std::endl;
-    }
+//    ts::ProjectsVector pv {"a", "b", "c", "d", "e", "f"};
+//    ts::DependenciesVector dv {{"a", "d"}, {"f", "b"}, {"b", "d"}, {"f", "a"}, {"d", "c"}};
+//    try {
+//        auto orderedProjects = ts::orderedProjects(pv, dv);
+//        for (auto && p : orderedProjects)
+//            std::cout << p << "\t";
+//        std::cout << std::endl;
+//    } catch (std::exception const& e) {
+//        std::cout << e.what() << std::endl;
+//    }
+
+    // 8
+//    try {
+//        std::vector<int> v {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+//        auto tree = bst::createMinimalBST(v);
+
+//        Tree::IntNodePtr min = tree->mLeftChild;
+//        while (min->mLeftChild)
+//            min = min->mLeftChild;
+
+//        Tree::IntNodePtr someNode = min->parent()->parent()->mRightChild->mRightChild;
+
+//        min = min->makeRightChild(200)->makeLeftChild(300);
+
+//        tree->dump("/home/vt4a2h/Projects/alg/fca_graph.dot");
+//        system("cd /home/vt4a2h/Projects/alg/ && dot fca_graph.dot -Tsvg > fca_graph.svg ");
+
+//        if (auto ca = fca::commonAncestor(min, someNode))
+//            std::cout << "First common ancestor: " << ca->mKey << std::endl;
+//        else
+//            std::cout << "No common ancestor here." << std::endl;
+//    } catch (std::exception const& e) {
+//        std::cout << e.what() << std::endl;
+//    }
 
     return 0;
 }
