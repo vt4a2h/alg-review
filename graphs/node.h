@@ -65,6 +65,45 @@ namespace Tree {
           return d;
       }
 
+      Ptr randomNode()
+      {
+          int leftSize = mLeftChild ? mLeftChild->mSize : 0;
+          int index = rand() % mSize;
+          if (index < leftSize)
+              return mLeftChild->randomNode();
+          else if (index == mSize || !mRightChild)
+               return ptr();
+          else
+              return mRightChild->randomNode();
+
+          throw std::logic_error("Cannot give you a random node.");
+      }
+
+      Ptr insertInOrder(Key k)
+      {
+          Ptr result;
+
+          if (k <= mKey)
+              result = !mLeftChild ? makeLeftChild(k) : mLeftChild->insertInOrder(k);
+          else
+              result = !mRightChild ? makeRightChild(k) : mRightChild->insertInOrder(k);
+
+          ++mSize;
+          return result;
+      }
+
+      Ptr find(Key k)
+      {
+          if (mKey == k)
+              return this;
+          else if (k <= mKey)
+              return mLeftChild ? mLeftChild->find(k) : nullptr;
+          else if (k > mKey)
+              return mRightChild ? mRightChild->find(k) : nullptr;
+
+          return nullptr;
+      }
+
       void dump(const std::string &path)
       {
          std::ofstream out(path, std::ofstream::out);
@@ -96,6 +135,8 @@ namespace Tree {
       Color mColor = None;
 
       Key mKey = 0;
+
+      Key mSize = 1;
    };
 
    template <class Key>

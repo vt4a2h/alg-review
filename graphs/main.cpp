@@ -1,6 +1,7 @@
 #include <iostream>
 #include <list>
 #include <numeric>
+#include <unordered_map>
 
 #include <boost/optional.hpp>
 
@@ -435,6 +436,57 @@ namespace ct
     }
 }
 
+// Given binary tree and sum. Count the number of pathes to get given sum. Paths should traveling
+// only from parent nodes to child.
+namespace sp
+{
+    using namespace Tree;
+
+    namespace details
+    {
+        using PathCount = std::unordered_map<int, int>;
+
+        void incVal(PathCount & pathCount, int key, int delta)
+        {
+            int newCount = pathCount[key] + delta;
+            if (newCount == 0)
+                pathCount.erase(key); // Reduce space
+            else
+                pathCount[key] = delta;
+        }
+
+        int countPathsWithSumImpl(IntNodePtr const& node, int targetSum, int runnigSum,
+                                  PathCount & pathCount)
+        {
+            if (!node)
+                return 0; // Base case
+
+            // Count paths with with sum ending at the current node
+            runnigSum += node->mKey;
+            int sum = runnigSum - targetSum;
+            int totalPaths = pathCount[sum];
+
+            // One additional path starts at root
+            if (runnigSum == targetSum)
+                ++totalPaths;
+
+            // Increment pathCount, recurse, then decrement
+            incVal(pathCount, runnigSum, 1);
+            totalPaths += countPathsWithSumImpl(node->mLeftChild, targetSum, runnigSum, pathCount);
+            totalPaths += countPathsWithSumImpl(node->mRightChild, targetSum, runnigSum, pathCount);
+            incVal(pathCount, runnigSum, -1);
+
+            return totalPaths;
+        }
+    }
+
+    int countPathWithSum(IntNodePtr const& node, int sum)
+    {
+        details::PathCount pathCount;
+        return details::countPathsWithSumImpl(node, sum, 0, pathCount);
+    }
+}
+
 int main(int /*argc*/, char */*argv*/[])
 {
     // 1
@@ -618,6 +670,40 @@ int main(int /*argc*/, char */*argv*/[])
 //    } catch (std::exception const& e) {
 //        std::cout << e.what() << std::endl;
 //    }
+
+    // 11
+    // Implement method for getting random node from BST (nodes should be equally likelly to be chosen)
+//    try {
+//        srand(time(NULL));
+
+//        auto tree = std::make_shared<Tree::IntNode>(4);
+//        auto two = tree->insertInOrder(2);
+//        two->insertInOrder(1);
+//        two->insertInOrder(3);
+
+//        auto six = tree->insertInOrder(6);
+//        six->insertInOrder(5);
+//        six->insertInOrder(7);
+
+//        tree->dump("/home/vt4a2h/Projects/alg/ub.dot");
+//        system("cd /home/vt4a2h/Projects/alg/ && dot ub.dot -Tsvg > ub.svg ");
+
+//        for (int i = 1; i <= 7; ++i)
+//            std::cout << tree->randomNode()->mKey << "\t";
+//        std::cout << std::endl;
+//    } catch (std::exception const& e) {
+//        std::cout << e.what() << std::endl;
+//    }
+
+    // 12 // TODO: revise
+    try {
+        std::vector<int> v {1, 2, 3, 4, 5};
+        auto tree = bst::createMinimalBST(v);
+
+        std::cout << sp::countPathWithSum(tree, 3) << std::endl;
+    } catch (std::exception const& e) {
+        std::cout << e.what() << std::endl;
+    }
 
     return 0;
 }
